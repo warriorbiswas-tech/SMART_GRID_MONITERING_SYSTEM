@@ -1,393 +1,271 @@
-# ⚡ SmartGrid Monitoring System
+# ⚡ SmartGrid Monitor
 
-<div align="center">
-
-### **Real-Time Multi-Source Energy Monitoring using ESP32, INA219 & BLE**
-
-*Measure • Visualize • Transmit*
-
-![Platform](https://img.shields.io/badge/Platform-ESP32-blue?style=for-the-badge&logo=espressif)
-![Display](https://img.shields.io/badge/Display-ST7789-orange?style=for-the-badge)
-![BLE](https://img.shields.io/badge/Bluetooth-Low%20Energy-0082FC?style=for-the-badge&logo=bluetooth)
-![Sensor](https://img.shields.io/badge/Sensor-INA219-success?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-
-</div>
+> **A BLE-enabled multi-source energy monitoring system built with ESP32, INA219, TFT display, and I2C multiplexer support.**
 
 ---
 
-# 📖 Overview
+## 📌 Overview
 
-**SmartGrid Monitoring System** is an ESP32-based IoT project designed to monitor multiple power sources using a single INA219 current and voltage sensor connected through a **TCA9548A I²C Multiplexer**.
+**SmartGrid Monitor** is a compact embedded system designed to measure and display voltage, current, and power from multiple energy sources in real time. It uses an **INA219 current sensor**, a **TCA9548A I2C multiplexer**, a **ST7789 TFT display**, and **Bluetooth Low Energy (BLE)** to show live energy data locally and broadcast it wirelessly.
 
-The system cycles through **seven independent power sources**, displaying real-time electrical parameters on a **2.8" ST7789 TFT display** while simultaneously broadcasting the measurements via **Bluetooth Low Energy (BLE)**.
+The system cycles through multiple channels, reads power data from each source, and presents a clean dashboard showing:
 
-The project provides a compact, scalable solution for monitoring renewable energy systems, battery banks, microgrids, educational laboratories, and research prototypes.
+* Source number
+* Voltage
+* Current
+* Power
+* Active / OFF status
 
----
-
-# ✨ Features
-
-- ⚡ Real-time Voltage Measurement
-- 🔋 Current Monitoring
-- 📊 Instantaneous Power Calculation
-- 🖥 Interactive TFT Dashboard
-- 📡 Bluetooth Low Energy (BLE) Data Broadcasting
-- 🔀 Multi-channel Monitoring (7 Sources)
-- 📈 Live Status Indication (Active / Off)
-- 🔄 Automatic Channel Scanning
-- ⚙ Modular Hardware Design
-- 🚀 Low-Cost IoT Architecture
+This makes it useful for **smart energy monitoring**, **renewable source tracking**, **lab prototypes**, and **IoT-based power management systems**.
 
 ---
 
-# 🎯 Applications
+## ✨ Features
 
-- Renewable Energy Monitoring
-- Smart Grid Demonstrations
-- Solar Panel Testing
-- Battery Management Systems
-- Energy Research
-- Engineering Laboratories
-- Educational Projects
-- IoT Demonstrations
-- Embedded Systems Learning
-
----
-
-# 🛠 Hardware Components
-
-| Component | Purpose |
-|------------|----------|
-| ESP32 Development Board | Main Controller |
-| INA219 Current Sensor | Voltage & Current Measurement |
-| TCA9548A I²C Multiplexer | Multi-channel Sensor Switching |
-| ST7789 TFT Display (240×320) | Real-time Dashboard |
-| Power Sources (×7) | Measurement Inputs |
-| Jumper Wires | Connections |
-| Breadboard / PCB | Prototype Assembly |
+* Real-time voltage, current, and power monitoring
+* Support for multiple INA219 channels through I2C multiplexer
+* Live TFT dashboard with color-coded status
+* BLE data broadcasting
+* Compact and readable embedded UI
+* Automatic channel switching
+* Serial debug output for troubleshooting
+* Low-cost modular energy monitoring setup
 
 ---
 
-# 💻 Software Stack
+## 🛠 Hardware Used
 
-- Arduino IDE
-- ESP32 Arduino Core
-- C++
-- Bluetooth Low Energy (BLE)
-- Wire (I²C)
-- SPI
-- Adafruit GFX Library
-- Adafruit ST7789 Library
-- Adafruit INA219 Library
+| Component                | Purpose                                |
+| ------------------------ | -------------------------------------- |
+| ESP32 / compatible board | Main controller                        |
+| INA219                   | Voltage and current sensing            |
+| TCA9548A I2C multiplexer | Channel selection for multiple sensors |
+| ST7789 TFT display       | Local visual output                    |
+| Jumper wires             | Connections                            |
+| Power sources            | Test inputs for monitoring             |
 
 ---
 
-# 📂 Project Structure
+## 📁 Code Structure
 
 ```text
-SmartGrid/
-│
-├── SmartGrid.ino
-├── README.md
-├── images/
-│   ├── prototype.jpg
-│   ├── dashboard.png
-│   ├── wiring.png
-│   └── ble_app.png
-│
-├── docs/
-│   ├── Circuit.pdf
-│   └── Report.pdf
-│
-└── LICENSE
+smartgrid/
+├── main.ino        # Main firmware
+├── README.md       # Project documentation
+└── wiring.png      # Optional circuit diagram
 ```
 
 ---
 
-# 🧠 System Architecture
+## 🔌 Pin Connections
 
-```text
-             Power Source 1
-                    │
-             Power Source 2
-                    │
-             Power Source 3
-                    │
-             Power Source 4
-                    │
-             Power Source 5
-                    │
-             Power Source 6
-                    │
-             Power Source 7
-                    │
-                    ▼
-          TCA9548A I²C Multiplexer
-                    │
-                    ▼
-             INA219 Sensor Module
-                    │
-                    ▼
-             ESP32 Controller
-            ┌──────────────┐
-            │              │
-            ▼              ▼
-      ST7789 TFT      BLE Broadcast
-            │              │
-            ▼              ▼
-     Local Display   Mobile / PC Client
-```
+### TFT Display (ST7789)
+
+| TFT Pin | ESP32 Pin |
+| ------- | --------- |
+| CS      | GPIO 10   |
+| DC      | GPIO 2    |
+| RST     | GPIO 3    |
+| MOSI    | GPIO 7    |
+| SCLK    | GPIO 6    |
+
+### I2C Bus
+
+| I2C Signal | ESP32 Pin |
+| ---------- | --------- |
+| SDA        | GPIO 4    |
+| SCL        | GPIO 5    |
+
+### TCA9548A
+
+| Part            | Address |
+| --------------- | ------- |
+| I2C Multiplexer | `0x70`  |
+
+### INA219
+
+| Part           | Address |
+| -------------- | ------- |
+| Current Sensor | `0x40`  |
 
 ---
 
-# ⚙ Working Principle
+## 📚 Libraries Required
 
-1. The ESP32 selects one channel on the **TCA9548A** multiplexer.
-2. The INA219 sensor measures the voltage and current of the selected source.
-3. Instantaneous power is calculated using:
+Install these libraries in Arduino IDE:
+
+* `Wire`
+* `SPI`
+* `Adafruit_GFX`
+* `Adafruit_ST7789`
+* `Adafruit_INA219`
+* `BLEDevice`
+* `BLEServer`
+* `BLEUtils`
+* `BLE2902`
+
+---
+
+## 🚀 How It Works
+
+1. The system selects an INA219 channel using the TCA9548A multiplexer.
+2. It initializes the INA219 sensor on that channel.
+3. Voltage and current are read from the selected source.
+4. Power is calculated using:
 
 ```text
 Power = Voltage × Current
 ```
 
-4. The measured values are displayed on the TFT screen.
-5. A BLE notification containing the measurements is transmitted.
-6. The controller switches to the next source.
-7. The process repeats continuously for all seven channels.
+5. The values are shown on the TFT display.
+6. The same readings are sent over BLE as a text notification.
+7. The system moves to the next channel and repeats.
 
 ---
 
-# 📊 Parameters Measured
+## 📊 Display Output
 
-| Parameter | Unit |
-|------------|------|
-| Voltage | Volts (V) |
-| Current | Milliamperes (mA) |
-| Power | Milliwatts (mW) |
-| Source Status | Active / Off |
+Each screen shows:
 
----
+* **SMART GRID** header
+* Current source number
+* Voltage in volts
+* Current in milliamps
+* Power in milliwatts
+* Status box:
 
-# 📱 TFT Dashboard
-
-The display provides:
-
-- SmartGrid title
-- Current source number
-- Voltage
-- Current
-- Calculated power
-- Color-coded status indicator
-- Active/Off detection
-
-### Status Colors
-
-🟢 **Green** → Active Source
-
-🔴 **Red** → No Voltage / Source Off
+  * **ACTIVE** if voltage is present
+  * **OFF** if voltage is low
 
 ---
 
-# 📡 Bluetooth Low Energy
+## 📡 BLE Data Format
 
-The ESP32 advertises itself as:
+The BLE characteristic sends data in this format:
 
 ```text
-SmartGrid
+CH:1,V:12.45,I:132.6
 ```
 
-Each notification contains:
+### Fields
+
+* `CH` → Source channel number
+* `V` → Voltage
+* `I` → Current
+
+This can be read by a mobile app, desktop app, or custom dashboard.
+
+---
+
+## ⚙️ Working Principle
 
 ```text
-CH:1,V:12.45,I:135.7
+Energy Source
+     ↓
+INA219 Sensor
+     ↓
+TCA9548A I2C Multiplexer
+     ↓
+ESP32 Reads Data
+     ↓
+TFT Display + BLE Broadcast
 ```
-
-Example:
-
-```
-CH:3
-Voltage : 5.02 V
-Current : 148.4 mA
-Power   : 744.9 mW
-```
-
-BLE can be received using:
-
-- nRF Connect
-- LightBlue
-- Custom Android App
-- Custom Python Client
-- Desktop BLE Applications
 
 ---
 
-# 🔌 Wiring
+## 🧪 Output Logic
 
-## ST7789 Display
-
-| Display Pin | ESP32 Pin |
-|--------------|-----------|
-| MOSI | GPIO 7 |
-| SCLK | GPIO 6 |
-| CS | GPIO 10 |
-| DC | GPIO 2 |
-| RESET | GPIO 3 |
+* Voltage below `0.5V` is treated as `0`
+* Current below `0.5 mA` is treated as `0`
+* Source is marked **ACTIVE** if voltage is above `1.0V`
+* Source is marked **OFF** otherwise
 
 ---
 
-## I²C
+## 🧰 Setup Instructions
 
-| Device | ESP32 |
-|---------|--------|
-| SDA | GPIO 4 |
-| SCL | GPIO 5 |
+### 1. Open Arduino IDE
 
----
+Install the required board package for ESP32.
 
-## Multiplexer
+### 2. Install libraries
 
-```
-ESP32
-   │
-TCA9548A
-   │
-INA219
-```
+Use Library Manager to install:
 
-Each channel connects to an independent power source.
+* Adafruit GFX
+* Adafruit ST7789
+* Adafruit INA219
 
----
+### 3. Connect hardware
 
-# 📂 Libraries Used
+Wire the TFT, INA219, and TCA9548A as shown above.
+
+### 4. Upload the code
+
+Select the correct ESP32 board and COM port, then upload.
+
+### 5. Open Serial Monitor
+
+Set baud rate to:
 
 ```text
-Wire
-SPI
-Adafruit_GFX
-Adafruit_ST7789
-Adafruit_INA219
-BLEDevice
-BLEServer
-BLEUtils
-BLE2902
-```
-
-Install using Arduino Library Manager.
-
----
-
-# 🚀 Getting Started
-
-### Clone Repository
-
-```bash
-git clone https://github.com/yourusername/SmartGrid.git
+115200
 ```
 
 ---
 
-### Open
+## 🔧 Troubleshooting
 
-```text
-SmartGrid.ino
-```
-
----
-
-### Install Libraries
-
-- Adafruit GFX
-- Adafruit ST7789
-- Adafruit INA219
-- ESP32 BLE Arduino
+| Problem                      | Possible Fix                                         |
+| ---------------------------- | ---------------------------------------------------- |
+| `INA FAIL` in serial monitor | Check wiring, channel selection, or sensor address   |
+| Blank TFT screen             | Verify SPI pins and display wiring                   |
+| BLE not visible              | Ensure BLE is enabled and device is powered          |
+| Wrong readings               | Check calibration and source connection              |
+| Data stuck on one channel    | Confirm TCA9548A channel wiring and sensor placement |
 
 ---
 
-### Select Board
+## 📈 Future Improvements
 
-```
-ESP32 Dev Module
-```
-
-Upload and power the board.
-
----
-
-# 📈 Future Improvements
-
-- 📊 Historical Data Logging
-- ☁ MQTT / Cloud Integration
-- 📡 Wi-Fi Dashboard
-- 🌐 Web Server Interface
-- 📱 Android Monitoring App
-- 🔋 Battery State-of-Charge Estimation
-- ⚠ Overcurrent Alerts
-- 📉 Graphical Trend Charts
-- 🌞 Renewable Energy Analytics
-- ⚡ Smart Load Management
+* Store readings to SD card
+* Add WiFi dashboard support
+* Show graphs on the display
+* Send data to cloud platforms like ThingSpeak
+* Add automatic alerts for low voltage
+* Use better power calibration
+* Add more source channels
+* Create a mobile BLE app
+* Add battery health estimation
 
 ---
 
-# 📸 Gallery
+## 🎯 Applications
 
-Add project images here.
-
-```text
-images/prototype.jpg
-images/dashboard.png
-images/wiring.png
-images/ble_app.png
-```
-
----
-
-# 🛣 Roadmap
-
-- [x] Multi-channel monitoring
-- [x] TFT interface
-- [x] BLE communication
-- [x] Automatic channel switching
-- [ ] Wi-Fi dashboard
-- [ ] Cloud analytics
-- [ ] Mobile application
-- [ ] Data logging (SD Card)
-- [ ] MQTT support
-- [ ] OTA firmware updates
+* Renewable energy monitoring
+* Smart grid prototype
+* Solar and wind source tracking
+* Laboratory testing
+* Educational projects
+* IoT power systems
+* Embedded energy dashboards
 
 ---
 
-# 📄 License
+## 👨‍💻 Author
 
-Licensed under the **MIT License**.
+**Arpan Biswas**
 
----
-
-# 👨‍💻 Author
-
-## **Arpan Biswas**
-
-Student Researcher • Embedded Systems Developer • IoT Enthusiast
-
-Interested in smart energy systems, robotics, IoT, embedded electronics, and sustainable technologies.
+Student • Maker • Embedded Systems Developer
 
 ---
 
-# 🙏 Acknowledgements
+## 📄 License
 
-Special thanks to:
-
-- Espressif Systems
-- Adafruit Industries
-- Arduino Community
-- Open-source Embedded Systems Community
+This project is open for educational and personal use. Add your preferred license here if needed.
 
 ---
 
-<div align="center">
+## ⭐ Final Note
 
-## ⭐ If you found this project useful, consider giving it a star!
-
-**"Measure every watt. Understand every source."**
-
-</div>
+**SmartGrid Monitor** is a practical embedded prototype for visualizing energy data in a clean and scalable way. It combines sensing, display, and wireless communication into one compact system.
