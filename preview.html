@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Grid Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0f14;
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      color: #00d4ff;
+      font-size: 32px;
+    }
+
+    button {
+      padding: 14px 30px;
+      font-size: 20px;
+      background: #00d4ff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      width: 95%;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: #1c1f26;
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 0 15px rgba(0,255,255,0.25);
+    }
+
+    .title {
+      font-size: 22px;
+      color: #00d4ff;
+      margin-bottom: 6px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .title::after {
+      content: "";
+      display: block;
+      height: 3px;
+      width: 100%;
+      background: #00d4ff;
+      margin-top: 4px;
+      border-radius: 2px;
+    }
+
+    .value {
+      font-size: 20px;
+      margin: 6px 0;
+      font-weight: bold;
+    }
+
+    .status {
+      font-size: 18px;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+
+    canvas {
+      margin-top: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Smart Grid Dashboard</h1>
+
+<button onclick="connectBLE()">Connect BLE</button>
+
+<div class="grid" id="grid"></div>
+
+<script>
+
+// -------- Source Names (REMOVED 8th) --------
+const sourceNames = {
+  1: "Solar",
+  2: "Wind",
+  3: "Piezo Electric",
+  4: "Hydrogen Solar",
+  5: "Helical Wind",
+  6: "Hydro",
+  7: "Tidal/Hybrid"
+};
+
+// -------- BLE UUIDs --------
+const SERVICE_UUID = "12345678-1234-1234-1234-1234567890ab";
+const CHARACTERISTIC_UUID = "abcd1234-5678-1234-5678-abcdef123456";
+
+let charts = {};
+const grid = document.getElementById("grid");
+
+// -------- Create UI (ONLY 7) --------
+for (let i = 1; i <= 7; i++) {
+
+  let card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <div class="title">${sourceNames[i]}</div>
+    <div class="value" id="v${i}">Voltage: -- V</div>
+    <div class="value" id="i${i}">Current: -- mA</div>
+    <div class="value" id="p${i}">Power: -- mW</div>
+    <div class="status" id="s${i}">Status: --</div>
+    <canvas id="chart${i}" height="100"></canvas>
+  `;
+
+  grid.appendChild(card);
+
+  let ctx = document.getElementById("chart" + i).getContext("2d");
+
+  charts[i] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Voltage', data: [], borderColor: 'cyan', fill: false },
+        { label: 'Current', data: [], borderColor: 'orange', fill: false },
+        { label: 'Power', data: [], borderColor: 'lime', fill: false }
+      ]
+    },
+    options: {
+      animation: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+// -------- BLE Connect --------
+async function connectBLE() {
+
+  const device = await navigator.bluetooth.requestDevice({
+    filters: [{ name: "SmartGrid" }],
+    optionalServices: [SERVICE_UUID]
+  });
+
+  const server = await device.gatt.connect();
+  const service = await server.getPrimaryService(SERVICE_UUID);
+  const characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+  await characteristic.startNotifications();
+  characteristic.addEventListener('characteristicvaluechanged', handleData);
+
+  alert("Connected!");
+}
+
+// -------- Handle Data --------
+function handleData(event) {
+
+  let value = new TextDecoder().decode(event.target.value);
+  let parts = value.split(",");
+
+  let ch = parseInt(parts[0].split(":")[1]);
+
+  // Ignore channel 8 if somehow received
+  if (ch > 7) return;
+
+  let v = parseFloat(parts[1].split(":")[1]);
+  let i = parseFloat(parts[2].split(":")[1]);
+
+  updateUI(ch, v, i);
+}
+
+// -------- Update UI --------
+function updateUI(ch, v, i) {
+
+  let power = v * i;
+
+  document.getElementById("v" + ch).innerText = "Voltage: " + v.toFixed(2) + " V";
+  document.getElementById("i" + ch).innerText = "Current: " + i.toFixed(1) + " mA";
+  document.getElementById("p" + ch).innerText = "Power: " + power.toFixed(1) + " mW";
+
+  let statusEl = document.getElementById("s" + ch);
+
+  if (v > 1.0) {
+    statusEl.innerText = "Status: ACTIVE";
+    statusEl.style.color = "lime";
+  } else {
+    statusEl.innerText = "Status: OFF";
+    statusEl.style.color = "red";
+  }
+
+  let chart = charts[ch];
+
+  chart.data.labels.push("");
+  chart.data.datasets[0].data.push(v);
+  chart.data.datasets[1].data.push(i);
+  chart.data.datasets[2].data.push(power);
+
+  if (chart.data.labels.length > 20) {
+    chart.data.labels.shift();
+    chart.data.datasets.forEach(d => d.data.shift());
+  }
+
+  chart.update();
+}
+
+</script>
+
+</body>
+</html>
